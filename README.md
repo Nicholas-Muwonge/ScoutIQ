@@ -1,7 +1,6 @@
 # ⚽ ScoutIQ - An AI Football Scout for World Cup 2026
----
 
-## 🎯 What is ScoutIQ?
+  ## 🎯 What is ScoutIQ?
 
 ScoutIQ is an **AI-powered football scouting agent** that goes far beyond answering questions to *thinking*, *quering a live database* and *taking action* on your behalf.
 

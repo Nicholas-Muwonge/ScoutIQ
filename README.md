@@ -8,8 +8,8 @@ ScoutIQ is an **AI-powered football scouting agent** that goes far beyond answer
 Ask it to:
 - **Find players** by any combination of attributes: *"Left-footed strikers under 24 who press hard"*
 - **Build lineups**: *"Give me a 4-3-3 optimized to beat a low block"*
-- **Compare players**: *"Mbappé vs Haaland at this World Cup — who would you sign?"*
-- **Generate & save scout reports**: *"Give me a full scouting report for Lamine Yamal"* — the report is written to MongoDB automatically
+- **Compare players**: *"Mbappé vs Haaland at this World Cup - who would you sign?"*
+- **Generate & save scout reports**: *"Give me a full scouting report for Lamine Yamal"* - the report is written to MongoDB automatically
 
 ---
 
@@ -37,7 +37,7 @@ User (Natural Language)
 
 ### Prerequisites
 - Node.js 20+
-- MongoDB (local) or MongoDB Atlas account (free tier works)
+- MongoDB or MongoDB Atlas account
 - Gemini API key
 
 ### 1. Clone & install

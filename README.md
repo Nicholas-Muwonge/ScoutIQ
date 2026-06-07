@@ -1,6 +1,6 @@
-# ⚽ ScoutIQ - An AI Football Scout for World Cup 2026
+# ScoutIQ - An AI Football Scout for World Cup 2026
 
-  ## 🎯 What is ScoutIQ?
+  ## What is ScoutIQ?
 
 ScoutIQ is an **AI-powered football scouting agent** that goes far beyond answering questions to *thinking*, *quering a live database* and *taking action* on your behalf.
 
@@ -12,7 +12,7 @@ Ask it to:
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 User (Natural Language)
@@ -32,7 +32,7 @@ User (Natural Language)
         ▼
  Structured Response → Frontend Chat UI
 ```
-## 🚀 Quick Start (Local)
+##  Quick Start (Local)
 
 ### Prerequisites
 - Node.js 20+
@@ -71,7 +71,7 @@ open frontend/index.html
 
 ---
 
-## 🐳 Docker (Full Stack)
+## Docker (Full Stack)
 
 ```bash
 # Start everything (MongoDB + backend + frontend)
@@ -82,7 +82,7 @@ docker-compose up --build
 
 ---
 
-## ☁️ Deploy to Google Cloud Run
+## Deploy to Google Cloud Run
 
 ```bash
 # Set your GCP project
@@ -100,7 +100,7 @@ bash scripts/deploy-gcp.sh
 ---
 
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -113,7 +113,7 @@ bash scripts/deploy-gcp.sh
 | Deployment | Google Cloud Run + Docker |
 
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 scoutiq/

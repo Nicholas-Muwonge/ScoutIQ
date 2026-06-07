@@ -113,7 +113,6 @@ bash scripts/deploy-gcp.sh
 | Frontend | Vanilla HTML/CSS/JS  |
 | Deployment | Google Cloud Run + Docker |
 
----
 
 ## 📁 Project Structure
 

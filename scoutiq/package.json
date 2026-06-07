@@ -1,0 +1,27 @@
+{
+  "name": "scoutiq",
+  "version": "1.0.0",
+  "description": "AI Football Scout for World Cup 2026 — Google Cloud Rapid Agent Hackathon",
+  "type": "module",
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "setup": "node scripts/setup-atlas.mjs",
+    "dev": "cd backend && npm run dev",
+    "start": "cd backend && npm start",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "deploy": "bash scripts/deploy-gcp.sh"
+  },
+  "keywords": [
+    "ai",
+    "football",
+    "world-cup",
+    "mongodb",
+    "claude",
+    "hackathon"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "mongodb": "^7.2.0"
+  }
+}

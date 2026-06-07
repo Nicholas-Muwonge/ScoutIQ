@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ScoutIQ — World Cup 2026 AI Scout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"/>
+<style>
+/* ── Design tokens ─────────────────────────────────────────────────── */
+:root {
+  --pitch: #0a1a0f;
+  --pitch-mid: #0e2214;
+  --pitch-line: rgba(255,255,255,0.07);
+  --turf: #1a3320;
+  --accent: #00ff87;
+  --accent-dim: #00cc6a;
+  --accent-glow: rgba(0,255,135,0.15);
+  --gold: #f5c842;
+  --red: #ff4444;
+  --blue: #4488ff;
+  --text: #e8f0e9;
+  --text-muted: #6b8a70;
+  --text-dim: #3a5240;
+  --border: rgba(255,255,255,0.08);
+  --card: rgba(14,34,20,0.9);
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ── Reset & base ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  min-height: 100%;
+  background: var(--pitch);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Pitch grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--pitch-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pitch-line) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+#app { position: relative; z-index: 1; display: flex; height: 100vh; }
+
+/* ── Sidebar ───────────────────────────────────────────────────────── */
+#sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--pitch-mid);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.logo-name {
+  font-family: var(--font-head);
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--text);
+  text-transform: uppercase;
+}
+.logo-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* Nav */
+.nav { padding: 12px 8px; flex: 1; overflow-y: auto; }
+.nav-section {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  padding: 12px 12px 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.nav-item.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-color: rgba(0,255,135,0.2);
+}
+.nav-icon { font-size: 18px; width: 20px; text-align: center; }
+
+/* Quick prompts */
+.quick-prompts { padding: 12px 8px; border-top: 1px solid var(--border); }
+.quick-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  padding: 0 12px 8px;
+  text-transform: uppercase;
+}
+.quick-btn {
+  display: block; width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+.quick-btn:hover {
+  border-color: rgba(0,255,135,0.3);
+  color: var(--text);
+  background: var(--accent-glow);
+}
+
+/* ── Main content ──────────────────────────────────────────────────── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Header ────────────────────────────────────────────────────────── */
+#header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(10,26,15,0.8);
+  backdrop-filter: blur(8px);
+}
+.header-title {
+  font-family: var(--font-head);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.header-badges { display: flex; gap: 8px; }
+.badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+.badge-live { color: var(--accent); border-color: rgba(0,255,135,0.3); background: rgba(0,255,135,0.08); }
+.badge-ai { color: var(--blue); border-color: rgba(68,136,255,0.3); background: rgba(68,136,255,0.08); }
+
+/* ── Tabs ──────────────────────────────────────────────────────────── */
+#tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--pitch-mid);
+  padding: 0 24px;
+}
+.tab {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Panels ────────────────────────────────────────────────────────── */
+.panel { display: none; flex: 1; overflow-y: auto; }
+.panel.active { display: flex; flex-direction: column; }
+
+/* ── Chat panel ────────────────────────────────────────────────────── */
+#chat-panel { flex-direction: column; }
+
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Welcome screen */
+.welcome {
+  text-align: center;
+  padding: 60px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.welcome-icon {
+  font-size: 48px;
+  filter: drop-shadow(0 0 20px rgba(0,255,135,0.4));
+}
+.welcome-title {
+  font-family: var(--font-head);
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.welcome-sub {
+  color: var(--text-muted);
+  font-size: 15px;
+  max-width: 400px;
+}
+.example-queries {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 600px;
+}
+.example-q {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  font-family: var(--font-body);
+}
+.example-q:hover {
+  border-color: rgba(0,255,135,0.3);
+  color: var(--text);
+  background: rgba(0,255,135,0.05);
+}
+.example-q strong { display: block; color: var(--text); font-size: 12px; margin-bottom: 2px; font-family: var(--font-mono); letter-spacing: 1px; }
+
+/* Messages */
+.msg { display: flex; gap: 12px; animation: fadeUp 0.3s ease; }
+.msg.user { flex-direction: row-reverse; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.msg-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.msg.user .msg-avatar { background: rgba(0,255,135,0.15); border: 1px solid rgba(0,255,135,0.3); }
+.msg.assistant .msg-avatar { background: rgba(68,136,255,0.15); border: 1px solid rgba(68,136,255,0.3); }
+
+.msg-bubble {
+  max-width: 75%;
+  border-radius: 12px;
+  padding: 14px 16px;
+  line-height: 1.7;
+  font-size: 14px;
+}
+.msg.user .msg-bubble {
+  background: rgba(0,255,135,0.1);
+  border: 1px solid rgba(0,255,135,0.2);
+  color: var(--text);
+  border-radius: 12px 2px 12px 12px;
+}
+.msg.assistant .msg-bubble {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 2px 12px 12px 12px;
+}
+
+/* Tool call indicators */
+.tool-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245,200,66,0.08);
+  border: 1px solid rgba(245,200,66,0.2);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold);
+  margin: 4px 0;
+}
+.tool-call::before { content: '⚙'; }
+
+/* Typing indicator */
+.typing {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 0;
+}
+.typing-dots { display: flex; gap: 4px; }
+.typing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: typingPulse 1.2s ease infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingPulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* Message content formatting */
+.msg-bubble h3 {
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 12px 0 6px;
+}
+.msg-bubble p { margin-bottom: 10px; }
+.msg-bubble ul { padding-left: 18px; margin-bottom: 10px; }
+.msg-bubble li { margin-bottom: 4px; }
+.msg-bubble strong { color: var(--accent); font-weight: 600; }
+.msg-bubble em { color: var(--gold); font-style: normal; font-weight: 600; }
+.msg-bubble code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(255,255,255,0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--gold);
+}
+
+/* Player card in chat */
+.player-card-mini {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 6px 0;
+}
+.player-pos-badge {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pos-gk { background: rgba(255,165,0,0.2); color: #ffa500; border: 1px solid rgba(255,165,0,0.3); }
+.pos-def { background: rgba(68,136,255,0.2); color: var(--blue); border: 1px solid rgba(68,136,255,0.3); }
+.pos-mid { background: rgba(0,255,135,0.15); color: var(--accent); border: 1px solid rgba(0,255,135,0.3); }
+.pos-fwd { background: rgba(255,68,68,0.2); color: var(--red); border: 1px solid rgba(255,68,68,0.3); }
+
+/* ── Input area ────────────────────────────────────────────────────── */
+#input-area {
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+  background: rgba(10,26,15,0.9);
+  backdrop-filter: blur(8px);
+}
+.input-row {
+  display: flex;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 10px 10px 16px;
+  transition: border-color 0.15s;
+}
+.input-row:focus-within { border-color: rgba(0,255,135,0.3); }
+#chat-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  resize: none;
+  max-height: 120px;
+  line-height: 1.5;
+}
+#chat-input::placeholder { color: var(--text-dim); }
+#send-btn {
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+#send-btn:hover { background: var(--accent-dim); transform: scale(1.05); }
+#send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── Leaderboard panel ─────────────────────────────────────────────── */
+#leaderboard-panel { padding: 24px; }
+.section-header {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.section-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.leaderboard-table th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.leaderboard-table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-size: 14px;
+}
+.leaderboard-table tr:hover td { background: rgba(255,255,255,0.02); }
+.rank-num {
+  font-family: var(--font-head);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dim);
+  width: 40px;
+}
+.rank-1 { color: var(--gold); }
+.rank-2 { color: #c0c0c0; }
+.rank-3 { color: #cd7f32; }
+.player-name-cell { font-weight: 600; color: var(--text); }
+.player-nat { font-size: 12px; color: var(--text-muted); }
+.stat-val {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+.stat-goals { color: var(--red); }
+.stat-assists { color: var(--blue); }
+.stat-xg { color: var(--gold); }
+.pos-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+/* ── Reports panel ─────────────────────────────────────────────────── */
+#reports-panel { padding: 24px; }
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.report-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  transition: border-color 0.15s;
+}
+.report-card:hover { border-color: rgba(0,255,135,0.2); }
+.report-player { font-family: var(--font-head); font-size: 20px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.report-rec {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+.rec-sign { background: rgba(0,255,135,0.1); color: var(--accent); border: 1px solid rgba(0,255,135,0.3); }
+.rec-monitor { background: rgba(245,200,66,0.1); color: var(--gold); border: 1px solid rgba(245,200,66,0.3); }
+.rec-pass { background: rgba(255,68,68,0.1); color: var(--red); border: 1px solid rgba(255,68,68,0.3); }
+.rec-loan { background: rgba(68,136,255,0.1); color: var(--blue); border: 1px solid rgba(68,136,255,0.3); }
+.report-rating {
+  float: right;
+  font-family: var(--font-head);
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--accent);
+}
+.report-summary { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 10px 0; }
+.report-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.report-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+.report-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-top: 12px; }
+
+/* ── Stats panel ───────────────────────────────────────────────────── */
+#stats-panel { padding: 24px; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-card-val {
+  font-family: var(--font-head);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--accent);
+  display: block;
+}
+.stat-card-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.player-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.player-card:hover {
+  border-color: rgba(0,255,135,0.3);
+  transform: translateY(-2px);
+}
+.pc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pc-name { font-family: var(--font-head); font-size: 16px; font-weight: 700; letter-spacing: 0.5px; flex: 1; }
+.pc-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.pc-stat { text-align: center; }
+.pc-stat-val { font-family: var(--font-mono); font-size: 14px; font-weight: 600; display: block; }
+.pc-stat-label { font-size: 10px; color: var(--text-muted); }
+.pc-nat { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+/* Loading state */
+.loading-pulse {
+  width: 100%; height: 60px;
+  background: linear-gradient(90deg, var(--card) 25%, rgba(0,255,135,0.04) 50%, var(--card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text); margin-bottom: 6px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ── Sidebar ── -->
+  <aside id="sidebar">
+    <div class="logo">
+      <div class="logo-badge">
+        <div class="logo-icon">⚽</div>
+        <span class="logo-name">ScoutIQ</span>
+      </div>
+      <div class="logo-sub">World Cup 2026 · AI Scout</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">Workspace</div>
+      <div class="nav-item active" onclick="switchTab('chat')" id="nav-chat">
+        <span class="nav-icon">💬</span> Scout Chat
+      </div>
+      <div class="nav-item" onclick="switchTab('leaderboard')" id="nav-leaderboard">
+        <span class="nav-icon">🏆</span> Leaderboard
+      </div>
+      <div class="nav-item" onclick="switchTab('players')" id="nav-players">
+        <span class="nav-icon">👥</span> Player Database
+      </div>
+      <div class="nav-item" onclick="switchTab('reports')" id="nav-reports">
+        <span class="nav-icon">📋</span> Scout Reports
+      </div>
+    </nav>
+
+    <div class="quick-prompts">
+      <div class="quick-label">Quick Scout</div>
+      <button class="quick-btn" onclick="sendQuick('Find the top 5 scorers at the World Cup with their xG stats')">
+        🎯 Top scorers + xG analysis
+      </button>
+      <button class="quick-btn" onclick="sendQuick('Build me a 4-3-3 dream team lineup from all World Cup 2026 players')">
+        ⚽ Build a 4-3-3 dream team
+      </button>
+      <button class="quick-btn" onclick="sendQuick('Which under-23 players have the most assists at this World Cup?')">
+        🌟 U23 assist leaders
+      </button>
+      <button class="quick-btn" onclick="sendQuick('Compare Kylian Mbappé and Erling Haaland at this World Cup')">
+        📊 Mbappé vs Haaland
+      </button>
+      <button class="quick-btn" onclick="sendQuick('Generate a detailed scouting report for Lamine Yamal')">
+        📝 Scout report: Lamine Yamal
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main id="main">
+    <div id="header">
+      <div class="header-title" id="header-title">Scout Chat</div>
+      <div class="header-badges">
+        <span class="badge badge-live">⬤ Live DB</span>
+        <span class="badge badge-ai">Claude Sonnet</span>
+      </div>
+    </div>
+
+    <div id="tabs">
+      <div class="tab active" onclick="switchTab('chat')" id="tab-chat">Chat</div>
+      <div class="tab" onclick="switchTab('leaderboard')" id="tab-leaderboard">Leaderboard</div>
+      <div class="tab" onclick="switchTab('players')" id="tab-players">Players</div>
+      <div class="tab" onclick="switchTab('reports')" id="tab-reports">Reports</div>
+    </div>
+
+    <!-- Chat panel -->
+    <div class="panel active" id="chat-panel">
+      <div id="messages">
+        <div class="welcome" id="welcome-screen">
+          <div class="welcome-icon">⚽</div>
+          <div class="welcome-title">ScoutIQ AI</div>
+          <div class="welcome-sub">Ask anything about World Cup 2026 players. Build lineups, compare stats, generate scout reports — all powered by live MongoDB data.</div>
+          <div class="example-queries">
+            <button class="example-q" onclick="sendQuick('Who are the fastest players at this World Cup? Show sprint speed rankings')">
+              <strong>💨 Pace Rankings</strong>
+              Find the fastest players by sprint speed
+            </button>
+            <button class="example-q" onclick="sendQuick('Which CONCACAF players have had the biggest impact at World Cup 2026?')">
+              <strong>🌎 CONCACAF Stars</strong>
+              Best from the host confederation
+            </button>
+            <button class="example-q" onclick="sendQuick('Find me left-footed wingers under 24 who can dribble and press')">
+              <strong>🔍 Smart Search</strong>
+              Left-footed young pressing wingers
+            </button>
+            <button class="example-q" onclick="sendQuick('Which striker has the best goals-to-xG ratio at this World Cup?')">
+              <strong>📊 xG Analysis</strong>
+              Who is overperforming their xG?
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="input-area">
+        <div class="input-row">
+          <textarea id="chat-input" placeholder="Ask about players, build lineups, request scout reports…" rows="1"></textarea>
+          <button id="send-btn" onclick="sendMessage()">→</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard panel -->
+    <div class="panel" id="leaderboard-panel">
+      <div class="section-header">Golden Boot Race</div>
+      <div class="section-sub">World Cup 2026 — Top scorers and creators</div>
+      <div id="leaderboard-content">
+        <div class="loading-pulse"></div>
+        <div class="loading-pulse"></div>
+        <div class="loading-pulse"></div>
+      </div>
+    </div>
+
+    <!-- Players panel -->
+    <div class="panel" id="players-panel">
+      <div class="stats-grid" id="db-stats">
+        <div class="stat-card"><span class="stat-card-val" id="stat-total">—</span><span class="stat-card-label">Players</span></div>
+        <div class="stat-card"><span class="stat-card-val" id="stat-goals" style="color:var(--red)">—</span><span class="stat-card-label">Total Goals</span></div>
+        <div class="stat-card"><span class="stat-card-val" id="stat-assists" style="color:var(--blue)">—</span><span class="stat-card-label">Total Assists</span></div>
+        <div class="stat-card"><span class="stat-card-val" id="stat-nations">—</span><span class="stat-card-label">Nations</span></div>
+      </div>
+      <div class="players-grid" id="players-grid">
+        <div class="loading-pulse"></div>
+        <div class="loading-pulse"></div>
+        <div class="loading-pulse"></div>
+        <div class="loading-pulse"></div>
+      </div>
+    </div>
+
+    <!-- Reports panel -->
+    <div class="panel" id="reports-panel">
+      <div class="section-header">Scout Reports</div>
+      <div class="section-sub">AI-generated scouting reports saved during analysis sessions</div>
+      <div class="reports-grid" id="reports-grid">
+        <div class="loading-pulse"></div>
+        <div class="loading-pulse"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:3001'
+  : window.location.origin;
+
+// ── State ───────────────────────────────────────────────────────────────────
+let messages = [];
+let isLoading = false;
+let currentTab = 'chat';
+
+// ── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  document.getElementById(`${tab}-panel`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.getElementById(`nav-${tab}`).classList.add('active');
+
+  const titles = { chat: 'Scout Chat', leaderboard: 'Leaderboard', players: 'Player Database', reports: 'Scout Reports' };
+  document.getElementById('header-title').textContent = titles[tab];
+
+  if (tab === 'leaderboard') loadLeaderboard();
+  if (tab === 'players') loadPlayers();
+  if (tab === 'reports') loadReports();
+}
+
+// ── Position helpers ─────────────────────────────────────────────────────────
+function posClass(pos) {
+  if (['GK'].includes(pos)) return 'pos-gk';
+  if (['CB','LB','RB'].includes(pos)) return 'pos-def';
+  if (['DM','CM','AM'].includes(pos)) return 'pos-mid';
+  return 'pos-fwd';
+}
+function posColor(pos) {
+  if (pos === 'GK') return '#ffa500';
+  if (['CB','LB','RB'].includes(pos)) return '#4488ff';
+  if (['DM','CM','AM'].includes(pos)) return '#00ff87';
+  return '#ff4444';
+}
+
+// ── Chat ─────────────────────────────────────────────────────────────────────
+function sendQuick(text) {
+  switchTab('chat');
+  document.getElementById('chat-input').value = text;
+  sendMessage();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+
+  // Hide welcome screen
+  const welcome = document.getElementById('welcome-screen');
+  if (welcome) welcome.remove();
+
+  // Add user message
+  messages.push({ role: 'user', content: text });
+  appendMessage('user', text);
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Show typing
+  const typingEl = appendTyping();
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+
+  try {
+    const response = await fetch(`${API}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages }),
+    });
+
+    typingEl.remove();
+
+    // Parse SSE stream
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let assistantText = '';
+    let msgEl = null;
+    let toolsShown = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const event = JSON.parse(line.slice(6));
+
+          if (event.type === 'tool_start') {
+            // Show tool call badge
+            if (!msgEl) msgEl = createAssistantBubble();
+            const toolBadge = document.createElement('div');
+            toolBadge.className = 'tool-call';
+            toolBadge.textContent = `Running ${event.tool}…`;
+            msgEl.appendChild(toolBadge);
+            toolsShown.push(toolBadge);
+            scrollToBottom();
+          }
+
+          if (event.type === 'tool_end') {
+            // Update tool badge to show it completed
+            const badge = toolsShown[toolsShown.length - 1];
+            if (badge) {
+              const toolNames = {
+                find_players: `Found ${event.result?.count || 0} players`,
+                aggregate_stats: `Computed ${event.result?.count || 0} results`,
+                save_scout_report: `Saved report for ${event.result?.player_name}`,
+                get_scout_reports: `Retrieved ${event.result?.count || 0} reports`,
+              };
+              badge.textContent = toolNames[event.tool] || `✓ ${event.tool}`;
+              badge.style.color = '#00ff87';
+              badge.style.borderColor = 'rgba(0,255,135,0.3)';
+              badge.style.background = 'rgba(0,255,135,0.06)';
+              badge.style.setProperty('--before', "'✓'");
+              badge.innerHTML = `✅ ${badge.textContent}`;
+            }
+          }
+
+          if (event.type === 'text' && event.text) {
+            assistantText += event.text;
+            if (!msgEl) msgEl = createAssistantBubble();
+            renderMarkdown(msgEl, assistantText, toolsShown);
+            scrollToBottom();
+          }
+
+          if (event.type === 'done') {
+            messages.push({ role: 'assistant', content: assistantText });
+            // Refresh reports if a report was saved
+            if (toolsShown.some(b => b.textContent.includes('Saved report'))) {
+              loadReports();
+            }
+          }
+        } catch (e) { /* skip malformed events */ }
+      }
+    }
+  } catch (err) {
+    typingEl.remove();
+    appendMessage('assistant', `⚠️ Connection error: ${err.message}. Make sure the backend is running on port 3001.`);
+  }
+
+  isLoading = false;
+  document.getElementById('send-btn').disabled = false;
+  input.focus();
+}
+
+function createAssistantBubble() {
+  const msgEl = document.createElement('div');
+  msgEl.className = 'msg assistant';
+  msgEl.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div class="msg-bubble" id="stream-bubble"></div>
+  `;
+  document.getElementById('messages').appendChild(msgEl);
+  return msgEl.querySelector('.msg-bubble');
+}
+
+function renderMarkdown(el, text, toolBadges) {
+  // Preserve tool badges before re-rendering
+  const badges = toolBadges.map(b => b.outerHTML).join('');
+
+  // Simple markdown rendering
+  let html = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^# (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+
+  html = `<p>${html}</p>`;
+  el.innerHTML = badges + html;
+}
+
+function appendMessage(role, text) {
+  const welcome = document.getElementById('welcome-screen');
+  if (welcome) welcome.remove();
+
+  const msgEl = document.createElement('div');
+  msgEl.className = `msg ${role}`;
+  msgEl.innerHTML = `
+    <div class="msg-avatar">${role === 'user' ? '👤' : '🤖'}</div>
+    <div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div>
+  `;
+  document.getElementById('messages').appendChild(msgEl);
+  scrollToBottom();
+}
+
+function appendTyping() {
+  const el = document.createElement('div');
+  el.className = 'msg assistant';
+  el.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div class="typing">
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+      <span style="font-size:12px;color:var(--text-dim)">Querying database…</span>
+    </div>
+  `;
+  document.getElementById('messages').appendChild(el);
+  scrollToBottom();
+  return el;
+}
+
+function scrollToBottom() {
+  const el = document.getElementById('messages');
+  el.scrollTop = el.scrollHeight;
+}
+
+// Auto-resize textarea
+document.getElementById('chat-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+document.getElementById('chat-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// ── Leaderboard ──────────────────────────────────────────────────────────────
+async function loadLeaderboard() {
+  const el = document.getElementById('leaderboard-content');
+  try {
+    const res = await fetch(`${API}/api/leaderboard`);
+    const data = await res.json();
+
+    el.innerHTML = `
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>Player</th>
+            <th>Pos</th>
+            <th>Goals</th>
+            <th>Assists</th>
+            <th>xG</th>
+            <th>xA</th>
+            <th>Games</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((p, i) => `
+            <tr onclick="sendQuick('Tell me about ${p.name} at World Cup 2026')" style="cursor:pointer">
+              <td><span class="rank-num ${i < 3 ? 'rank-'+(i+1) : ''}">${i < 3 ? ['🥇','🥈','🥉'][i] : i+1}</span></td>
+              <td>
+                <div class="player-name-cell">${p.name}</div>
+                <div class="player-nat">${p.nationality}</div>
+              </td>
+              <td><span class="pos-pill" style="background:${posColor(p.position)}20;color:${posColor(p.position)};border:1px solid ${posColor(p.position)}40">${p.position}</span></td>
+              <td><span class="stat-val stat-goals">${p.goals_wc2026}</span></td>
+              <td><span class="stat-val stat-assists">${p.assists_wc2026}</span></td>
+              <td><span class="stat-val stat-xg">${p.xG}</span></td>
+              <td><span class="stat-val" style="color:var(--blue)">${p.xA}</span></td>
+              <td style="color:var(--text-muted)">${p.matches_wc2026}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch {
+    el.innerHTML = '<p style="color:var(--text-muted);padding:20px">Could not load leaderboard — is the backend running?</p>';
+  }
+}
+
+// ── Players ──────────────────────────────────────────────────────────────────
+async function loadPlayers() {
+  try {
+    const res = await fetch(`${API}/api/players`);
+    const players = await res.json();
+
+    // Stats
+    const goals = players.reduce((s, p) => s + p.goals_wc2026, 0);
+    const assists = players.reduce((s, p) => s + p.assists_wc2026, 0);
+    const nations = new Set(players.map(p => p.nationality)).size;
+    document.getElementById('stat-total').textContent = players.length;
+    document.getElementById('stat-goals').textContent = goals;
+    document.getElementById('stat-assists').textContent = assists;
+    document.getElementById('stat-nations').textContent = nations;
+
+    // Grid
+    document.getElementById('players-grid').innerHTML = players.map(p => `
+      <div class="player-card" onclick="sendQuick('Give me a detailed scouting report for ${p.name}'); switchTab('chat')">
+        <div class="pc-header">
+          <span class="pos-pill" style="background:${posColor(p.position)}20;color:${posColor(p.position)};border:1px solid ${posColor(p.position)}40;font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:4px">${p.position}</span>
+          <span class="pc-name">${p.name}</span>
+        </div>
+        <div class="pc-stats">
+          <div class="pc-stat"><span class="pc-stat-val stat-goals">${p.goals_wc2026}</span><span class="pc-stat-label">Goals</span></div>
+          <div class="pc-stat"><span class="pc-stat-val stat-assists">${p.assists_wc2026}</span><span class="pc-stat-label">Assists</span></div>
+          <div class="pc-stat"><span class="pc-stat-val stat-xg">${p.xG}</span><span class="pc-stat-label">xG</span></div>
+        </div>
+        <div class="pc-nat">🌍 ${p.nationality} · ${p.confederation}</div>
+      </div>
+    `).join('');
+  } catch {
+    document.getElementById('players-grid').innerHTML = '<p style="color:var(--text-muted)">Could not load players — is the backend running?</p>';
+  }
+}
+
+// ── Reports ──────────────────────────────────────────────────────────────────
+async function loadReports() {
+  const grid = document.getElementById('reports-grid');
+  try {
+    const res = await fetch(`${API}/api/reports`);
+    const reports = await res.json();
+
+    if (reports.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">No reports yet</div>
+          <p>Ask the scout to analyze a player and a report will be saved here automatically.</p>
+          <button class="quick-btn" style="margin:12px auto 0;max-width:300px" onclick="sendQuick('Generate a detailed scouting report for Jude Bellingham'); switchTab('chat')">
+            Generate your first report →
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    const recClass = {
+      'Sign immediately': 'rec-sign',
+      'Monitor closely': 'rec-monitor',
+      'Pass': 'rec-pass',
+      'Loan candidate': 'rec-loan',
+    };
+
+    grid.innerHTML = reports.map(r => `
+      <div class="report-card">
+        <span class="report-rating">${r.report.scout_rating}/10</span>
+        <div class="report-player">${r.player_name}</div>
+        <span class="report-rec ${recClass[r.report.recommendation] || 'rec-monitor'}">${r.report.recommendation}</span>
+        <div class="report-summary">${r.report.summary}</div>
+        <div class="report-tags">
+          ${(r.report.strengths || []).slice(0, 3).map(s => `<span class="report-tag">✓ ${s}</span>`).join('')}
+          ${(r.report.weaknesses || []).slice(0, 1).map(w => `<span class="report-tag" style="color:var(--red)">✗ ${w}</span>`).join('')}
+        </div>
+        <div class="report-date">${new Date(r.created_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>
+    `).join('');
+  } catch {
+    grid.innerHTML = '<p style="color:var(--text-muted)">Could not load reports — is the backend running?</p>';
+  }
+}
+</script>
+</body>
+</html>

@@ -1,7 +1,4 @@
-# ⚽ ScoutIQ —An AI Football Scout for World Cup 2026
-
-> **Google Cloud Rapid Agent Hackathon** · MongoDB Partner Track  
-> Built with **Gemini  · **Google Cloud Agent Builder** · **MongoDB MCP**
+# ⚽ ScoutIQ - An AI Football Scout for World Cup 2026
 ---
 
 ## 🎯 What is ScoutIQ?

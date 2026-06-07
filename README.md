@@ -1,6 +1,6 @@
 # ScoutIQ - An AI Football Scout for World Cup 2026
 
-  ## What is ScoutIQ?
+##  What is ScoutIQ?
 
 ScoutIQ is an **AI-powered football scouting agent** that goes far beyond answering questions to *thinking*, *quering a live database* and *taking action* on your behalf.
 
@@ -32,7 +32,7 @@ User (Natural Language)
         ▼
  Structured Response → Frontend Chat UI
 ```
-##  Quick Start (Local)
+## Quick Start (Local)
 
 ### Prerequisites
 - Node.js 20+
@@ -112,6 +112,7 @@ bash scripts/deploy-gcp.sh
 | Frontend | Vanilla HTML/CSS/JS  |
 | Deployment | Google Cloud Run + Docker |
 
+---
 
 ## Project Structure
 
